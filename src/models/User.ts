@@ -7,6 +7,7 @@ import {
 import { telemedDB } from "../databases/telemed";
 
 export class User extends Model {
+    id!: number;
     email!: string;
 }
 

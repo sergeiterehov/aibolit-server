@@ -6,6 +6,7 @@ import { HealthWeight } from "../models/HealthWeight";
 import { HealthHeight } from "../models/HealthHeight";
 import { HealthMassIndex } from "../models/HealthMassIndex";
 import { HealthMood } from "../models/HealthMood";
+import { User } from "../models/User";
 
 const router = Router();
 
@@ -62,10 +63,10 @@ interface IRequestSave {
     mood: IRawMood[];
 }
 
-async function saveHartRate(items: IRawHartRate[]) {
+async function saveHartRate(userId: number, items: IRawHartRate[]) {
     await HealthHartRate.bulkCreate(items.map((item) => {
         return {
-            userId: 1,
+            userId,
             device: item.device,
             date: moment(item.date).toDate(),
             avgVal: item.avgVal,
@@ -73,10 +74,10 @@ async function saveHartRate(items: IRawHartRate[]) {
     }));
 }
 
-async function saveSteps(items: IRawStep[]) {
+async function saveSteps(userId: number, items: IRawStep[]) {
     await HealthStep.bulkCreate(items.map((item) => {
         return {
-            userId: 1,
+            userId,
             device: item.device,
             periodFrom: moment(item.period.from).toDate(),
             periodTo: moment(item.period.to).toDate(),
@@ -85,10 +86,10 @@ async function saveSteps(items: IRawStep[]) {
     }));
 }
 
-async function saveWeight(items: IRawWeight[]) {
+async function saveWeight(userId: number, items: IRawWeight[]) {
     await HealthWeight.bulkCreate(items.map((item) => {
         return {
-            userId: 1,
+            userId,
             device: item.device,
             date: moment(item.date).toDate(),
             val: item.val,
@@ -96,10 +97,10 @@ async function saveWeight(items: IRawWeight[]) {
     }));
 }
 
-async function saveHeight(items: IRawHeight[]) {
+async function saveHeight(userId: number, items: IRawHeight[]) {
     await HealthHeight.bulkCreate(items.map((item) => {
         return {
-            userId: 1,
+            userId,
             device: item.device,
             date: moment(item.date).toDate(),
             val: item.val,
@@ -107,10 +108,10 @@ async function saveHeight(items: IRawHeight[]) {
     }));
 }
 
-async function saveMassIndex(items: IRawMassIndex[]) {
+async function saveMassIndex(userId: number, items: IRawMassIndex[]) {
     await HealthMassIndex.bulkCreate(items.map((item) => {
         return {
-            userId: 1,
+            userId,
             device: item.device,
             date: moment(item.date).toDate(),
             val: item.val,
@@ -118,10 +119,10 @@ async function saveMassIndex(items: IRawMassIndex[]) {
     }));
 }
 
-async function saveMood(items: IRawMood[]) {
+async function saveMood(userId: number, items: IRawMood[]) {
     await HealthMood.bulkCreate(items.map((item) => {
         return {
-            userId: 1,
+            userId,
             device: item.device,
             date: moment(item.date).toDate(),
             smile: item.smile,
@@ -129,16 +130,47 @@ async function saveMood(items: IRawMood[]) {
     }));
 }
 
+declare global {
+    namespace Express {
+        export interface Request {
+           user: User;
+        }
+    }
+}
+
+router.use(async (req, res, next) => {
+    const email = req.body && req.body.email;
+
+    if (!email) {
+        return res.status(400).send({
+            error: "В корневом объекте не дайдено поле email",
+        });
+    }
+
+    const user = (await User.findOne({where: {email}})) || (await User.create({email}));
+
+    if (!user) {
+        return res.status(403).send({
+            error: "Пользователь с таким email не найден",
+        });
+    }
+
+    req.user = user;
+
+    next();
+});
+
 router.post("/save", async (req, res) => {
     const data: IRequestSave = req.body;
+    const id = req.user.id;
 
     try {
-        await saveHartRate(data.hr).catch(async (e) => { throw new Error("Ошибка в HartRate"); });
-        await saveSteps(data.step).catch(async (e) => { throw new Error("Ошибка в Step"); });
-        await saveWeight(data.weight).catch(async (e) => { throw new Error("Ошибка в Weight"); });
-        await saveHeight(data.height).catch(async (e) => { throw new Error("Ошибка в Height"); });
-        await saveMassIndex(data.massIndex).catch(async (e) => { throw new Error("Ошибка в MassIndex"); });
-        await saveMood(data.mood).catch(async (e) => { throw new Error("Ошибка в Mood"); });
+        await saveHartRate(id, data.hr).catch(async (e) => { throw new Error("Ошибка в HartRate"); });
+        await saveSteps(id, data.step).catch(async (e) => { throw new Error("Ошибка в Step"); });
+        await saveWeight(id, data.weight).catch(async (e) => { throw new Error("Ошибка в Weight"); });
+        await saveHeight(id, data.height).catch(async (e) => { throw new Error("Ошибка в Height"); });
+        await saveMassIndex(id, data.massIndex).catch(async (e) => { throw new Error("Ошибка в MassIndex"); });
+        await saveMood(id, data.mood).catch(async (e) => { throw new Error("Ошибка в Mood"); });
     } catch (e) {
         console.error(e);
 
@@ -152,13 +184,15 @@ router.post("/save", async (req, res) => {
     });
 });
 
-router.get("/all", async (req, res) => {
-    const hr = await HealthHartRate.findAll();
-    const step = await HealthStep.findAll();
-    const weight = await HealthWeight.findAll();
-    const height = await HealthHeight.findAll();
-    const massIndex = await HealthMassIndex.findAll();
-    const mood = await HealthMood.findAll();
+router.post("/all", async (req, res) => {
+    const userId = req.user.id;
+
+    const hr = await HealthHartRate.findAll({where: {userId}});
+    const step = await HealthStep.findAll({where: {userId}});
+    const weight = await HealthWeight.findAll({where: {userId}});
+    const height = await HealthHeight.findAll({where: {userId}});
+    const massIndex = await HealthMassIndex.findAll({where: {userId}});
+    const mood = await HealthMood.findAll({where: {userId}});
 
     res.send({
         ok: true,
@@ -174,12 +208,14 @@ router.get("/all", async (req, res) => {
 });
 
 router.post("/clear", async (req, res) => {
-    const hr = await HealthHartRate.destroy({where: {}});
-    const step = await HealthStep.destroy({where: {}});
-    const weight = await HealthWeight.destroy({where: {}});
-    const height = await HealthHeight.destroy({where: {}});
-    const massIndex = await HealthMassIndex.destroy({where: {}});
-    const mood = await HealthMood.destroy({where: {}});
+    const userId = req.user.id;
+
+    const hr = await HealthHartRate.destroy({where: {userId}});
+    const step = await HealthStep.destroy({where: {userId}});
+    const weight = await HealthWeight.destroy({where: {userId}});
+    const height = await HealthHeight.destroy({where: {userId}});
+    const massIndex = await HealthMassIndex.destroy({where: {userId}});
+    const mood = await HealthMood.destroy({where: {userId}});
 
     res.send({
         ok: true,
