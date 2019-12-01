@@ -71,7 +71,7 @@ async function saveHartRate(userId: number, items: IRawHartRate[]) {
             date: moment(item.date).toDate(),
             avgVal: item.avgVal,
         };
-    }));
+    }), {updateOnDuplicate: ["avgVal"]});
 }
 
 async function saveSteps(userId: number, items: IRawStep[]) {
@@ -83,7 +83,7 @@ async function saveSteps(userId: number, items: IRawStep[]) {
             periodTo: moment(item.period.to).toDate(),
             val: item.val,
         };
-    }));
+    }), {updateOnDuplicate: ["val"]});
 }
 
 async function saveWeight(userId: number, items: IRawWeight[]) {
@@ -94,7 +94,7 @@ async function saveWeight(userId: number, items: IRawWeight[]) {
             date: moment(item.date).toDate(),
             val: item.val,
         };
-    }));
+    }), {updateOnDuplicate: ["val"]});
 }
 
 async function saveHeight(userId: number, items: IRawHeight[]) {
@@ -105,7 +105,7 @@ async function saveHeight(userId: number, items: IRawHeight[]) {
             date: moment(item.date).toDate(),
             val: item.val,
         };
-    }));
+    }), {updateOnDuplicate: ["val"]});
 }
 
 async function saveMassIndex(userId: number, items: IRawMassIndex[]) {
@@ -116,7 +116,7 @@ async function saveMassIndex(userId: number, items: IRawMassIndex[]) {
             date: moment(item.date).toDate(),
             val: item.val,
         };
-    }));
+    }), {updateOnDuplicate: ["val"]});
 }
 
 async function saveMood(userId: number, items: IRawMood[]) {
@@ -127,7 +127,7 @@ async function saveMood(userId: number, items: IRawMood[]) {
             date: moment(item.date).toDate(),
             smile: item.smile,
         };
-    }));
+    }), {updateOnDuplicate: ["smile"]});
 }
 
 declare global {

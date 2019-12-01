@@ -16,6 +16,11 @@ module.exports = {
       },
     });
 
+    queryInterface.addConstraint("users", ["email"], {
+      type: 'unique',
+      name: 'users_email_uk'
+    });
+
     await queryInterface.createTable("health_hart_rates", {
       id: {
         type: Sequelize.INTEGER,
@@ -37,6 +42,11 @@ module.exports = {
       date: Sequelize.DATE,
       device: Sequelize.STRING,
       avgVal: Sequelize.FLOAT,
+    });
+
+    queryInterface.addConstraint("health_hart_rates", ["userId", "date", "device"], {
+      type: 'unique',
+      name: 'health_hart_rates_uk'
     });
 
     await queryInterface.createTable("health_steps", {
@@ -63,6 +73,11 @@ module.exports = {
       val: Sequelize.FLOAT,
     });
 
+    queryInterface.addConstraint("health_steps", ["userId", "periodFrom", "periodTo", "device"], {
+      type: 'unique',
+      name: 'health_steps_uk'
+    });
+
     await queryInterface.createTable("health_weights", {
       id: {
         type: Sequelize.INTEGER,
@@ -84,6 +99,11 @@ module.exports = {
       date: Sequelize.DATE,
       device: Sequelize.STRING,
       val: Sequelize.FLOAT,
+    });
+
+    queryInterface.addConstraint("health_weights", ["userId", "date", "device"], {
+      type: 'unique',
+      name: 'health_weights_uk'
     });
 
     await queryInterface.createTable("health_heights", {
@@ -109,6 +129,11 @@ module.exports = {
       val: Sequelize.FLOAT,
     });
 
+    queryInterface.addConstraint("health_heights", ["userId", "date", "device"], {
+      type: 'unique',
+      name: 'health_heights_uk'
+    });
+
     await queryInterface.createTable("health_mass_indexes", {
       id: {
         type: Sequelize.INTEGER,
@@ -132,6 +157,11 @@ module.exports = {
       val: Sequelize.FLOAT,
     });
 
+    queryInterface.addConstraint("health_mass_indexes", ["userId", "date", "device"], {
+      type: 'unique',
+      name: 'health_mass_indexes_uk'
+    });
+
     await queryInterface.createTable("health_moods", {
       id: {
         type: Sequelize.INTEGER,
@@ -153,6 +183,11 @@ module.exports = {
       date: Sequelize.DATE,
       device: Sequelize.STRING,
       smile: Sequelize.STRING,
+    });
+
+    queryInterface.addConstraint("health_moods", ["userId", "date", "device"], {
+      type: 'unique',
+      name: 'health_moods_uk'
     });
 
     await queryInterface.bulkInsert("users", [
