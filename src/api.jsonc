@@ -1,0 +1,60 @@
+{
+    "POST /health/save": {
+        "hr": [
+            {
+                "date": "2019-12-01 12:12:12Z+0", // KEY
+                "device": "Apple Watch 5; watchOS 6; DEVICE_ID", // KEY
+                "avgVal": 123.2,
+            }
+        ],
+        "step": [
+            {
+                "period": {
+                    "from": "2019-12-01 12:12:12Z+0",
+                    "to": "2019-12-01 12:12:12Z+0",
+                }, // KEY
+                "device": "Apple Watch 5; watchOS 6; DEVICE_ID", // KEY
+                "count": 123,
+            }
+        ],
+        "weight": [
+            {
+                "date": "2019-12-01 12:12:12Z+0", // KEY
+                "device": "Apple Watch 5; watchOS 6; DEVICE_ID", // KEY
+                "val": 123.2,
+            }
+        ],
+        "height": [
+            {
+                "date": "2019-12-01 12:12:12Z+0", // KEY
+                "device": "Apple Watch 5; watchOS 6; DEVICE_ID", // KEY
+                "val": 123.2,
+            }
+        ],
+        "massIndex": [
+            {
+                "date": "2019-12-01 12:12:12Z+0", // KEY
+                "device": "Apple Watch 5; watchOS 6; DEVICE_ID", // KEY
+                "val": 123.2,
+            }
+        ],
+        "mood": [
+            {
+                "date": "2019-12-01 12:12:12Z+0", // KEY
+                "device": "Apple Watch 5; watchOS 6; DEVICE_ID", // KEY
+                "smile": ":smile:",
+            }
+        ],
+    },
+
+
+    "RESPONSE 100-200 OK": {
+        "ok": true,
+    },
+
+    "RESPONSE 300-500 NOT OK": {
+        "error": "Text",
+    },
+
+
+}

@@ -1,7 +1,13 @@
 const express = require("express");
+const bodyParser = require("body-parser");
+
+const indexRouter = require("./controllers")
 
 const app = express();
 
-app.get("/", (req, res) => res.send("Hello, world!"));
+app.use(bodyParser.json());
+
+app.use("/", indexRouter);
+
 
 app.listen(3000);
