@@ -70,7 +70,7 @@ async function saveHartRate(items: IRawHartRate[]) {
             date: moment(item.date).toDate(),
             avgVal: item.avgVal,
         };
-    })).catch(async (e) => { throw new Error("Ошибка в HartRate"); });
+    }));
 }
 
 async function saveSteps(items: IRawStep[]) {
@@ -82,7 +82,7 @@ async function saveSteps(items: IRawStep[]) {
             periodTo: moment(item.period.to).toDate(),
             val: item.val,
         };
-    })).catch(async (e) => { throw new Error("Ошибка в Step"); });
+    }));
 }
 
 async function saveWeight(items: IRawWeight[]) {
@@ -93,7 +93,7 @@ async function saveWeight(items: IRawWeight[]) {
             date: moment(item.date).toDate(),
             val: item.val,
         };
-    })).catch(async (e) => { throw new Error("Ошибка в Weight"); });
+    }));
 }
 
 async function saveHeight(items: IRawHeight[]) {
@@ -104,7 +104,7 @@ async function saveHeight(items: IRawHeight[]) {
             date: moment(item.date).toDate(),
             val: item.val,
         };
-    })).catch(async (e) => { throw new Error("Ошибка в Height"); });
+    }));
 }
 
 async function saveMassIndex(items: IRawMassIndex[]) {
@@ -115,7 +115,7 @@ async function saveMassIndex(items: IRawMassIndex[]) {
             date: moment(item.date).toDate(),
             val: item.val,
         };
-    })).catch(async (e) => { throw new Error("Ошибка в MassIndex"); });
+    }));
 }
 
 async function saveMood(items: IRawMood[]) {
@@ -126,19 +126,19 @@ async function saveMood(items: IRawMood[]) {
             date: moment(item.date).toDate(),
             smile: item.smile,
         };
-    })).catch(async (e) => { throw new Error("Ошибка в Mood"); });
+    }));
 }
 
 router.post("/save", async (req, res) => {
     const data: IRequestSave = req.body;
 
     try {
-        await saveHartRate(data.hr);
-        await saveSteps(data.step);
-        await saveWeight(data.weight);
-        await saveHeight(data.height);
-        await saveMassIndex(data.massIndex);
-        await saveMood(data.mood);
+        await saveHartRate(data.hr).catch(async (e) => { throw new Error("Ошибка в HartRate"); });
+        await saveSteps(data.step).catch(async (e) => { throw new Error("Ошибка в Step"); });
+        await saveWeight(data.weight).catch(async (e) => { throw new Error("Ошибка в Weight"); });
+        await saveHeight(data.height).catch(async (e) => { throw new Error("Ошибка в Height"); });
+        await saveMassIndex(data.massIndex).catch(async (e) => { throw new Error("Ошибка в MassIndex"); });
+        await saveMood(data.mood).catch(async (e) => { throw new Error("Ошибка в Mood"); });
     } catch (e) {
         console.error(e);
 
