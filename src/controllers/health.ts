@@ -3,23 +3,42 @@ import { HealthHartRate } from "../models/HealthHartRate";
 
 const router = Router();
 
-router.post("/save", (req, res) => {
+interface IRawSave {
+    hr: IRawHartRate[];
+}
+
+interface IRawHartRate {
+    date: string;
+    device: string;
+    avgVal: number;
+}
+
+async function saveHartRate(items: IRawHartRate[]) {
+    await HealthHartRate.bulkCreate(items.map((item) => {
+        return {
+            date: item.date,
+            avgVal: item.avgVal,
+            device: item.device,
+        };
+    }));
+}
+
+router.post("/save", async (req, res) => {
+    const data: IRawSave = req.body;
+
+    await saveHartRate(data.hr);
+
     res.send({
         ok: true,
     });
 });
 
 router.get("/save", async (req, res) => {
-    const hr = new HealthHartRate();
-    hr.avgVal = 123;
-    hr.date = new Date();
-    hr.device = "test";
+    const hr = await HealthHartRate.findAll();
 
-    await hr.save();
-
-    const list = await HealthHartRate.findAll();
-
-    res.send(list);
+    res.send({
+        hr,
+    });
 });
 
 module.exports = router;
