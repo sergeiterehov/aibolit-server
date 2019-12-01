@@ -14,7 +14,7 @@
                     "to": "2019-12-01 12:12:12Z+0",
                 }, // KEY
                 "device": "Apple Watch 5; watchOS 6; DEVICE_ID", // KEY
-                "count": 123,
+                "val": 123,
             }
         ],
         "weight": [

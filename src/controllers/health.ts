@@ -53,6 +53,7 @@ interface IRawMood extends IRawCommon {
 }
 
 interface IRequestSave {
+    email: string;
     hr: IRawHartRate[];
     step: IRawStep[];
     weight: IRawWeight[];
@@ -151,7 +152,7 @@ router.post("/save", async (req, res) => {
     });
 });
 
-router.get("/save", async (req, res) => {
+router.get("/all", async (req, res) => {
     const hr = await HealthHartRate.findAll();
     const step = await HealthStep.findAll();
     const weight = await HealthWeight.findAll();
@@ -160,13 +161,37 @@ router.get("/save", async (req, res) => {
     const mood = await HealthMood.findAll();
 
     res.send({
-        hr,
-        step,
-        weight,
-        height,
-        massIndex,
-        mood,
+        ok: true,
+        objects: {
+            hr,
+            step,
+            weight,
+            height,
+            massIndex,
+            mood,
+        },
     });
 });
 
-module.exports = router;
+router.post("/clear", async (req, res) => {
+    const hr = await HealthHartRate.destroy({where: {}});
+    const step = await HealthStep.destroy({where: {}});
+    const weight = await HealthWeight.destroy({where: {}});
+    const height = await HealthHeight.destroy({where: {}});
+    const massIndex = await HealthMassIndex.destroy({where: {}});
+    const mood = await HealthMood.destroy({where: {}});
+
+    res.send({
+        ok: true,
+        deleted: {
+            hr,
+            step,
+            weight,
+            height,
+            massIndex,
+            mood,
+        },
+    });
+});
+
+export default router;
