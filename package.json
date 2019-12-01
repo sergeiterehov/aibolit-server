@@ -1,0 +1,27 @@
+{
+  "name": "telemed-server",
+  "version": "1.0.0",
+  "description": "TeleMed Server",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergeiterehov/telemed-server.git"
+  },
+  "keywords": [
+    "telemed",
+    "server"
+  ],
+  "author": "Sergey Terekhov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sergeiterehov/telemed-server/issues"
+  },
+  "homepage": "https://github.com/sergeiterehov/telemed-server#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
