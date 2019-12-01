@@ -5,8 +5,9 @@ import {
     STRING,
     FLOAT
 } from "sequelize";
+import configs from "../../config/config.json";
 
-const sequelize = new Sequelize("mysql://root:password@localhost:3306/telemed");
+const sequelize = new Sequelize(configs[process.env.NODE_ENV || "development"]);
 
 export class HealthHartRate extends Model {
     avgVal!: number;

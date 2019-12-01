@@ -1,4 +1,5 @@
 import { Router } from "express";
+import moment from "moment";
 import { HealthHartRate } from "../models/HealthHartRate";
 
 const router = Router();
@@ -16,7 +17,7 @@ interface IRawHartRate {
 async function saveHartRate(items: IRawHartRate[]) {
     await HealthHartRate.bulkCreate(items.map((item) => {
         return {
-            date: item.date,
+            date: moment(item.date).toDate(),
             avgVal: item.avgVal,
             device: item.device,
         };
