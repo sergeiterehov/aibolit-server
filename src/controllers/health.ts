@@ -17,6 +17,7 @@ interface IRawHartRate {
 async function saveHartRate(items: IRawHartRate[]) {
     await HealthHartRate.bulkCreate(items.map((item) => {
         return {
+            userId: 1,
             date: moment(item.date).toDate(),
             avgVal: item.avgVal,
             device: item.device,

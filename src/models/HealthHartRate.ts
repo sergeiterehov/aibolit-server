@@ -1,25 +1,25 @@
 import {
     Model,
-    Sequelize,
     DATE,
     STRING,
-    FLOAT
+    FLOAT,
+    INTEGER
 } from "sequelize";
-import configs from "../../config/config.json";
-
-const sequelize = new Sequelize(configs[process.env.NODE_ENV || "development"]);
+import { telemedDB } from "../databases/telemed";
 
 export class HealthHartRate extends Model {
     avgVal!: number;
     date!: Date;
     device!: string;
+    userId!: number;
 }
 
 HealthHartRate.init({
+    userId: INTEGER,
     date: DATE,
     device: STRING,
     avgVal: FLOAT,
 }, {
-    sequelize,
-    tableName: "health_hart_rate"
+    sequelize: telemedDB,
+    tableName: "health_hart_rates"
 });
