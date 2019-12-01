@@ -5,7 +5,7 @@ import indexRouter from "./controllers";
 
 const app = express();
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: "10mb"}));
 
 app.use("/", indexRouter);
 
