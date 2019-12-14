@@ -2,16 +2,23 @@ import { Router } from "express";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
 import { Message } from "../models/Message";
 import { Op } from "sequelize";
+import { checkSchema, validationResult } from "express-validator";
 import { User } from "../models/User";
+import { AttachmentType } from "../enums/AttachmentType";
+import { MessageAttachment } from "../models/MessageAttachment";
 
 const router = Router().use(withUserAutentication);
 
-router.post("/with", async (req, res) => {
-    const withUserId = req.body.userId !== undefined ? Number(req.body.userId) : undefined;
-
-    if (undefined === withUserId) {
-        return res.status(400).send({ error: "USER_ID_REQUIRED" });
+router.post("/with", ...checkSchema({
+    userId: {
+        isInt: true,
+    },
+}), async (req, res) => {
+    if (!validationResult(req).isEmpty()) {
+        return res.status(400).send(validationResult(req).array());
     }
+
+    const withUserId = req.body.userId;
 
     const withUser = await User.findOne({where: { id: withUserId }});
 
@@ -32,7 +39,7 @@ router.post("/with", async (req, res) => {
                 toUserId: user.id,
             },
         ],
-    } })
+    }, include: [MessageAttachment], order: [["id", "DESC"]], limit: 100 })
 
     res.send({
         users: [ user, withUser ],
@@ -41,20 +48,33 @@ router.post("/with", async (req, res) => {
     });
 });
 
-router.post("/send", async (req, res) => {
-    const text = req.body.text;
-
-    if (!text) {
-        return res.status(400).send({ error: "TEXT_REQUIRED" });
+router.post("/send", ...checkSchema({
+    userId: {
+        isInt: true,
+    },
+    text: {
+        isString: true,
+    },
+    attachments: {
+        isArray: true,
+    },
+    "attachments.*.type": {
+        isString: true,
+        isIn: {
+            options: [Object.keys(AttachmentType)],
+        },
+    },
+    "attachments.*.resource": {
+        isString: true,
+    },
+}), async (req, res) => {
+    if (!validationResult(req).isEmpty()) {
+        return res.status(400).send(validationResult(req).array());
     }
 
-    const toUserId = req.body.userId !== undefined ? Number(req.body.userId) : undefined;
+    const { userId, text, attachments } = req.body;
 
-    if (undefined === toUserId) {
-        return res.status(400).send({ error: "USER_ID_REQUIRED" });
-    }
-
-    const toUser = await User.findOne({where: { id: toUserId }});
+    const toUser = await User.findOne({where: { id: userId }});
 
     if (!toUser) {
         return res.status(404).send({ error: "USER_NOT_FOUND" });
@@ -69,6 +89,17 @@ router.post("/send", async (req, res) => {
     message.text = text;
 
     await message.save();
+
+    for (const attachmentItem of attachments) {
+        const attachment = new MessageAttachment();
+
+        attachment.messageId = message.id;
+        // TODO: fix it shit
+        attachment.type = AttachmentType[attachmentItem.type as string];
+        attachment.resource = attachmentItem.resource;
+
+        await attachment.save();
+    }
 
     res.send({ ok: true, id: message.id });
 });

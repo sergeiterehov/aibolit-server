@@ -7,6 +7,7 @@ import {
     TEXT
 } from "sequelize";
 import { telemedDB } from "../databases/telemed";
+import { MessageAttachment } from "./MessageAttachment";
 
 export class Message extends Model {
     id!: number;
@@ -23,3 +24,5 @@ Message.init({
     sequelize: telemedDB,
     tableName: "messages"
 });
+
+Message.hasMany(MessageAttachment);
