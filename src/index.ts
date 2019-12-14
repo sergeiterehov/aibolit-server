@@ -9,7 +9,6 @@ app.use(bodyParser.json({limit: "10mb"}));
 
 app.use("/", indexRouter);
 
-
 app.listen(3000);
 
 export default express;
