@@ -1,8 +1,7 @@
-import Sequelize, { QueryInterface, INTEGER, DATE } from "sequelize/types";
-import { User } from "../models/User";
+import Sequelize, { QueryInterface, INTEGER, DATE, TEXT } from "sequelize";
 
 async function up(queryInterface: QueryInterface) {
-    queryInterface.createTable(
+    await queryInterface.createTable(
         "messages",
         {
             id: {
@@ -15,17 +14,35 @@ async function up(queryInterface: QueryInterface) {
             fromUserId: {
                 type: INTEGER,
                 references: {
-                    model: User,
+                    model: "users",
                     key: "id",
                 },
                 allowNull: false,
+            },
+            toUserId: {
+                type: INTEGER,
+                references: {
+                    model: "users",
+                    key: "id",
+                },
+                allowNull: false,
+            },
+            text: {
+                type: TEXT,
             }
         },
-    )
+    );
+
+    await queryInterface.addIndex("messages", ["fromUserId", "toUserId"], {
+        name: "messages_from_to",
+    });
+    await queryInterface.addIndex("messages", ["toUserId", "fromUserId"], {
+        name: "messages_to_from",
+    });
 }
 
 async function down(queryInterface: QueryInterface) {
-    queryInterface.dropTable("messages");
+    await queryInterface.dropTable("messages");
 }
 
 module.exports = { up, down };

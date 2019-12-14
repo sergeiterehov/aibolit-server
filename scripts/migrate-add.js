@@ -1,7 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const moment = require("moment");
-const template = `import Sequelize, { QueryInterface } from "sequelize/types";
+const template = `import Sequelize, { QueryInterface } from "sequelize";
 
 async function up(queryInterface: QueryInterface) {
     // UP
