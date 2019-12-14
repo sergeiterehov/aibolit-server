@@ -1,13 +1,8 @@
 import { Router } from "express";
-import { Provider, Notification } from "apn";
+import { Notification } from "apn";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
 import { UserToken } from "../models/UserToken";
-
-const provider = new Provider({
-    cert: "/var/certs/telemed-apn-cert.pem",
-    key: "/var/certs/telemed-apn-key.pem",
-    production: true,
-});
+import { services } from "../services";
 
 const router = Router().use(withUserAutentication);
 
@@ -50,9 +45,12 @@ router.post("/test", async (req, res) => {
         const notif = new Notification();
 
         notif.topic = "ru.sberbank.iHealthMonitor";
-        notif.alert = "Hello!";
+        notif.alert = {
+            title: "У вас новое тестовое сообщение",
+            body: "Как сейчас настроение?",
+        };
 
-        const response = await provider.send(notif, token.token);
+        const response = await services.push.send(notif, token.token);
 
         results.push(response)
     }));
