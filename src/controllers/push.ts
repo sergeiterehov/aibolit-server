@@ -4,8 +4,8 @@ import { withUserAutentication } from "../middlewares/withUserAutentication";
 import { UserToken } from "../models/UserToken";
 
 const provider = new Provider({
-    cert: "/Users/sterehov/Downloads/cert.pem",
-    key: "/Users/sterehov/Downloads/key.pem",
+    cert: "/var/certs/telemed-apn-cert.pem",
+    key: "/var/certs/telemed-apn-key.pem",
     production: true,
 });
 
