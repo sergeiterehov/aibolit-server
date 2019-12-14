@@ -7,6 +7,8 @@
     "start": "nodemon src/index.ts",
     "start:app": "nodemon src/app.ts",
     "start:ms:push": "nodemon src/msPush.ts",
+    "build": "node scripts/build.js",
+    "migrate:add": "node scripts/migrate-add.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
