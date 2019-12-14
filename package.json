@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "nodemon src/index.ts",
+    "start:app": "nodemon src/app.ts",
     "start:ms:push": "nodemon src/msPush.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
