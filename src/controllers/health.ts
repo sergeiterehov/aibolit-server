@@ -8,6 +8,10 @@ import { HealthMassIndex } from "../models/HealthMassIndex";
 import { HealthMood } from "../models/HealthMood";
 import { User } from "../models/User";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
+import { Message } from "../models/Message";
+import { SystemUser } from "../enums/SystemUser";
+import { MessageAttachment } from "../models/MessageAttachment";
+import { AttachmentType } from "../enums/AttachmentType";
 
 const router = Router().use(withUserAutentication);
 
@@ -120,15 +124,36 @@ async function saveMassIndex(userId: number, items: IRawMassIndex[]) {
     }), {updateOnDuplicate: ["val"]});
 }
 
+/**
+ * @deprecated
+ */
 async function saveMood(userId: number, items: IRawMood[]) {
-    await HealthMood.bulkCreate(items.map((item) => {
+    const moods = await HealthMood.bulkCreate(items.map((item) => {
         return {
             userId,
-            device: item.device,
+            device: item.device || "",
             date: moment(item.date).toDate(),
             smile: item.smile,
         };
     }), {updateOnDuplicate: ["smile"]});
+
+    await Promise.all(moods.map(async (mood) => {
+        const message = new Message();
+
+        message.fromUserId = userId;
+        message.toUserId = SystemUser.System;
+
+        await message.save();
+
+        const attachment = new MessageAttachment();
+
+        attachment.messageId = message.id;
+        attachment.type = AttachmentType.Mood;
+        attachment.resourceId = mood.id;
+        attachment.resource = mood.smile;
+
+        await attachment.save();
+    }));
 }
 
 declare global {
@@ -149,6 +174,7 @@ router.post("/save", async (req, res) => {
         await saveWeight(id, data.weight).catch(async (e) => { throw new Error("Ошибка в Weight"); });
         await saveHeight(id, data.height).catch(async (e) => { throw new Error("Ошибка в Height"); });
         await saveMassIndex(id, data.massIndex).catch(async (e) => { throw new Error("Ошибка в MassIndex"); });
+        // TODO: depricated
         await saveMood(id, data.mood).catch(async (e) => { throw new Error("Ошибка в Mood"); });
     } catch (e) {
         console.error(e);

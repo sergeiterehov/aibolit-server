@@ -7,12 +7,14 @@ import {
     TEXT
 } from "sequelize";
 import { telemedDB } from "../databases/telemed";
+import { AttachmentType } from "../enums/AttachmentType";
 
 export class MessageAttachment extends Model {
     id!: number;
     messageId!: number;
-    type!: number;
+    type!: AttachmentType;
     resource!: string;
+    resourceId!: number;
 }
 
 MessageAttachment.init({
@@ -25,6 +27,7 @@ MessageAttachment.init({
     },
     type: INTEGER,
     resource: TEXT,
+    resourceId: INTEGER,
 }, {
     sequelize: telemedDB,
     tableName: "message_attachments"

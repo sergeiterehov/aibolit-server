@@ -6,8 +6,30 @@ import { checkSchema, validationResult } from "express-validator";
 import { User } from "../models/User";
 import { AttachmentType } from "../enums/AttachmentType";
 import { MessageAttachment } from "../models/MessageAttachment";
+import { HealthMood } from "../models/HealthMood";
 
 const router = Router().use(withUserAutentication);
+
+async function createMoodFromResource(resource: any, userId: number) {
+    if (!resource) {
+        throw new Error("RESOURCE_IS_REQUIRED");
+    }
+
+    if (!resource.smile) {
+        throw new Error("SMILE_IS_REQUIRED");
+    }
+
+    const mood = new HealthMood();
+
+    mood.device = "",
+    mood.date = new Date();
+    mood.userId = userId;
+    mood.smile = resource.smile;
+
+    await mood.save();
+
+    return mood;
+}
 
 router.post("/with", ...checkSchema({
     userId: {
@@ -41,6 +63,13 @@ router.post("/with", ...checkSchema({
         ],
     }, include: [MessageAttachment], order: [["id", "DESC"]], limit: 100 })
 
+    /**
+     * TODO:
+     * Можно пройти по всем сообщениям и собрать ID настроений,
+     * почле чего запросить настроения с этими ID и врожить их в
+     * {resources: {mood: []}}
+     */
+
     res.send({
         users: [ user, withUser ],
         yourId: user.id,
@@ -64,8 +93,12 @@ router.post("/send", ...checkSchema({
             options: [Object.keys(AttachmentType)],
         },
     },
+    "attachments.*.resourceId": {
+        isInt: true,
+        optional: true,
+    },
     "attachments.*.resource": {
-        isString: true,
+        optional: true,
     },
 }), async (req, res) => {
     if (!validationResult(req).isEmpty()) {
@@ -90,18 +123,35 @@ router.post("/send", ...checkSchema({
 
     await message.save();
 
+    const warns: string[] = [];
+
     for (const attachmentItem of attachments) {
-        const attachment = new MessageAttachment();
+        try {
+            const attachment = new MessageAttachment();
 
-        attachment.messageId = message.id;
-        // TODO: fix it shit
-        attachment.type = AttachmentType[attachmentItem.type as string];
-        attachment.resource = attachmentItem.resource;
+            attachment.messageId = message.id;
+            // TODO: fix this shit
+            attachment.type = AttachmentType[attachmentItem.type as string];
+            attachment.resourceId = attachmentItem.resourceId;
 
-        await attachment.save();
+            if (attachment.type === AttachmentType.Mood) {
+                const mood = await createMoodFromResource(attachmentItem.resource, fromUser.id);
+
+                attachment.resourceId = mood.id;
+                attachment.resource = mood.smile;
+            }
+
+            await attachment.save();
+        } catch (e) {
+            warns.push((e && e.message) || "UNKNOWN_ERROR");
+        }
     }
 
-    res.send({ ok: true, id: message.id });
+    res.send({
+        ok: true,
+        id: message.id,
+        warns: warns.length ? warns : undefined,
+    });
 });
 
 export default router;

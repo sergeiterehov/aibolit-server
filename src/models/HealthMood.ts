@@ -8,6 +8,7 @@ import {
 import { telemedDB } from "../databases/telemed";
 
 export class HealthMood extends Model {
+    id!: number;
     smile!: string;
     date!: Date;
     device!: string;

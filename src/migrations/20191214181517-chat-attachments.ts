@@ -33,7 +33,7 @@ async function up(queryInterface: QueryInterface) {
 }
 
 async function down(queryInterface: QueryInterface) {
-    await  queryInterface.dropTable("message_attachments");
+    await queryInterface.dropTable("message_attachments");
 }
 
 module.exports = { up, down };
