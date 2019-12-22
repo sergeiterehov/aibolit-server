@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { User } from "../models/User";
 import { withSchema } from "../middlewares/withSchema";
+import { withErrorHandler, RequestHttpError } from "../middlewares/withErrorHandler";
 
 const router = Router();
 
@@ -12,9 +13,9 @@ router.post("/", withSchema({
         isLength: {options: {min: 40, max: 40}},
         isLowercase: true,
     },
-}), async (req, res) => {
+}), withErrorHandler(async (req, res) => {
     if (req.user) {
-        return res.status(400).send({error: "ALREADY_AUTH"});
+        throw new RequestHttpError("ALREADY_AUTH");
     }
 
     const { email, password } = req.body;
@@ -22,7 +23,7 @@ router.post("/", withSchema({
     const existsUser = await User.findOne({where: {email: email}});
 
     if (existsUser) {
-        return res.status(400).send({error: "EMAIL_EXISTS"});
+        throw new RequestHttpError("EMAIL_EXISTS");
     }
 
     const user = new User();
@@ -33,6 +34,6 @@ router.post("/", withSchema({
     await user.save();
 
     return res.send({ok: true, id: user.id});
-});
+}));
 
 export default router;

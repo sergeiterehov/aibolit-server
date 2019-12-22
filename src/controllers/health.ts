@@ -12,6 +12,7 @@ import { Message } from "../models/Message";
 import { SystemUser } from "../enums/SystemUser";
 import { MessageAttachment } from "../models/MessageAttachment";
 import { AttachmentType } from "../enums/AttachmentType";
+import { withErrorHandler } from "../middlewares/withErrorHandler";
 
 const router = Router().use(withUserAutentication);
 
@@ -164,30 +165,20 @@ declare global {
     }
 }
 
-router.post("/save", async (req, res) => {
+router.post("/save", withErrorHandler(async (req, res) => {
     const data: IRequestSave = req.body;
     const id = req.user.id;
 
-    try {
-        await saveHartRate(id, data.hr).catch(async (e) => { throw new Error("Ошибка в HartRate"); });
-        await saveSteps(id, data.step).catch(async (e) => { throw new Error("Ошибка в Step"); });
-        await saveWeight(id, data.weight).catch(async (e) => { throw new Error("Ошибка в Weight"); });
-        await saveHeight(id, data.height).catch(async (e) => { throw new Error("Ошибка в Height"); });
-        await saveMassIndex(id, data.massIndex).catch(async (e) => { throw new Error("Ошибка в MassIndex"); });
-        // TODO: depricated
-        await saveMood(id, data.mood).catch(async (e) => { throw new Error("Ошибка в Mood"); });
-    } catch (e) {
-        console.error(e);
+    await saveHartRate(id, data.hr);
+    await saveSteps(id, data.step);
+    await saveWeight(id, data.weight);
+    await saveHeight(id, data.height);
+    await saveMassIndex(id, data.massIndex);
+    // TODO: depricated
+    await saveMood(id, data.mood);
 
-        return res.status(500).send({
-            error: e ? e.message : "unknown"
-        });
-    }
-
-    res.send({
-        ok: true,
-    });
-});
+    res.send({ok: true});
+}));
 
 router.post("/all", async (req, res) => {
     const userId = req.user.id;
