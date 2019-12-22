@@ -180,7 +180,7 @@ router.post("/save", withErrorHandler(async (req, res) => {
     res.send({ok: true});
 }));
 
-router.post("/all", async (req, res) => {
+router.post("/all", withErrorHandler(async (req, res) => {
     const userId = req.user.id;
 
     const hr = await HealthHartRate.findAll({where: {userId}});
@@ -201,9 +201,9 @@ router.post("/all", async (req, res) => {
             mood,
         },
     });
-});
+}));
 
-router.post("/clear", async (req, res) => {
+router.post("/clear", withErrorHandler(async (req, res) => {
     const userId = req.user.id;
 
     const hr = await HealthHartRate.destroy({where: {userId}});
@@ -224,6 +224,6 @@ router.post("/clear", async (req, res) => {
             mood,
         },
     });
-});
+}));
 
 export default router;

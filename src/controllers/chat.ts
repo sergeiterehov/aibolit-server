@@ -2,11 +2,12 @@ import { Router } from "express";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
 import { Message } from "../models/Message";
 import { Op } from "sequelize";
-import { checkSchema, validationResult } from "express-validator";
 import { User } from "../models/User";
 import { AttachmentType } from "../enums/AttachmentType";
 import { MessageAttachment } from "../models/MessageAttachment";
 import { HealthMood } from "../models/HealthMood";
+import { withErrorHandler, RequestHttpError, ExistsHttpError } from "../middlewares/withErrorHandler";
+import { withSchema } from "../middlewares/withSchema";
 
 const router = Router().use(withUserAutentication);
 
@@ -31,21 +32,17 @@ async function createMoodFromResource(resource: any, userId: number) {
     return mood;
 }
 
-router.post("/with", ...checkSchema({
+router.post("/with", withSchema({
     userId: {
         isInt: true,
     },
-}), async (req, res) => {
-    if (!validationResult(req).isEmpty()) {
-        return res.status(400).send(validationResult(req).array());
-    }
-
+}), withErrorHandler(async (req, res) => {
     const withUserId = req.body.userId;
 
     const withUser = await User.findOne({where: { id: withUserId }});
 
     if (!withUser) {
-        return res.status(404).send({ error: "USER_NOT_FOUND" });
+        throw new RequestHttpError("USER_NOT_FOUND");
     }
 
     const user = req.user;
@@ -75,9 +72,9 @@ router.post("/with", ...checkSchema({
         yourId: user.id,
         messages,
     });
-});
+}));
 
-router.post("/send", ...checkSchema({
+router.post("/send", withSchema({
     userId: {
         isInt: true,
     },
@@ -100,17 +97,13 @@ router.post("/send", ...checkSchema({
     "attachments.*.resource": {
         optional: true,
     },
-}), async (req, res) => {
-    if (!validationResult(req).isEmpty()) {
-        return res.status(400).send(validationResult(req).array());
-    }
-
+}), withErrorHandler(async (req, res) => {
     const { userId, text, attachments } = req.body;
 
     const toUser = await User.findOne({where: { id: userId }});
 
     if (!toUser) {
-        return res.status(404).send({ error: "USER_NOT_FOUND" });
+        throw new ExistsHttpError("USER_NOT_FOUND");
     }
 
     const fromUser = req.user;
@@ -152,6 +145,6 @@ router.post("/send", ...checkSchema({
         id: message.id,
         warns: warns.length ? warns : undefined,
     });
-});
+}));
 
 export default router;

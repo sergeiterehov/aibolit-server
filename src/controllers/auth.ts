@@ -3,7 +3,7 @@ import { withSchema } from "../middlewares/withSchema";
 import { User } from "../models/User";
 import { services } from "../services";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
-import { withErrorHandler, AccessHttpError } from "../middlewares/withErrorHandler";
+import { withErrorHandler, AccessHttpError, ExistsHttpError } from "../middlewares/withErrorHandler";
 
 const router = Router();
 
@@ -25,7 +25,7 @@ router.post("/classic", withSchema({
     const user = await User.findOne({where: {email}});
 
     if (!user) {
-        throw new AccessHttpError("USER_NOT_FOUND");
+        throw new ExistsHttpError("USER_NOT_FOUND");
     }
 
     if (!user.validatePassword(password)) {

@@ -30,6 +30,12 @@ export class AccessHttpError extends HttpError {
     }
 }
 
+export class ExistsHttpError extends HttpError {
+    constructor(message?: string) {
+        super(message, 404);
+    }
+}
+
 export const withErrorHandler = (methodHandler: RequestHandler): RequestHandler => {
     return async function methodWithErrorHandler(req, res, next) {
         try {
