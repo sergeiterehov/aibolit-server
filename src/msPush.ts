@@ -1,5 +1,6 @@
 import express from "express";
 import { services } from "./services";
+import "./models";
 
 const app = express();
 

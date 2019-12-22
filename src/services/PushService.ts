@@ -1,6 +1,10 @@
 import { Provider, Notification } from "apn";
-import { UserToken } from "../models/UserToken";
 import { User } from "../models/User";
+import { UserToken } from "../models/UserToken";
+import { Message } from "../models/Message";
+import { SystemUser } from "../enums/SystemUser";
+
+const howAreYouMessage = "Как сейчас настроение?";
 
 export interface IPushServiceConfig {
     certPemFile: string;
@@ -24,7 +28,7 @@ export class PushService {
         notif.topic = "ru.sberbank.iHealthMonitor";
         notif.alert = {
             title: "У вас новое сообщение",
-            body: "Как сейчас настроение?",
+            body: howAreYouMessage,
         };
 
         return notif;
@@ -41,13 +45,34 @@ export class PushService {
     }
 
     public async sendHowAreYouAll() {
-        const tokenModels = await UserToken.findAll({ where: {} });
-        const tokens = tokenModels.map((model) => model.token);
-
+        const tokens = await UserToken.findAll({ where: {} });
         const notif = this.getHowAreYouNotification();
-        const response = await this.send(notif, tokens);
 
-        return response.sent.length;
+        const usersWithMessage: number[] = [];
+
+        async function sendMessageToUser(userId: number) {
+            if (usersWithMessage.includes(userId)) {
+                return;
+            }
+
+            usersWithMessage.push(userId);
+
+            const message = new Message();
+
+            message.fromUserId = SystemUser.System;
+            message.toUserId = userId;
+            message.text = howAreYouMessage;
+
+            await message.save();
+        }
+
+        await Promise.all(tokens.map(async (token) => {
+            await sendMessageToUser(token.userId);
+
+            await this.send(notif, token.token);
+        }));
+
+        return tokens.length;
     }
 
     public async send(notif: Notification, deviceToken: string|string[]) {
