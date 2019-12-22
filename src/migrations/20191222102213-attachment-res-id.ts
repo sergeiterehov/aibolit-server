@@ -13,6 +13,8 @@ async function up(queryInterface: QueryInterface) {
 
 async function down(queryInterface: QueryInterface) {
     await queryInterface.removeIndex("message_attachments", "attachemnts_resource_id");
+
+    await queryInterface.removeColumn("message_attachments", "resourceId");
 }
 
 module.exports = { up, down };
