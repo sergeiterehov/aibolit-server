@@ -61,6 +61,13 @@ export class PushService {
 
             await message.save();
 
+            const requestAttachment = new MessageAttachment();
+
+            requestAttachment.messageId = message.id;
+            requestAttachment.type = AttachmentType.MoodRequest;
+
+            await requestAttachment.save();
+
             const tokens = await UserToken.findAll({ where: {
                 userId: user.id,
             } });
@@ -68,11 +75,6 @@ export class PushService {
             if (!tokens.length) {
                 return;
             }
-
-            const requestAttachment = new MessageAttachment();
-
-            requestAttachment.messageId = message.id;
-            requestAttachment.type = AttachmentType.MoodRequest;
 
             await Promise.all(tokens.map(async (token) => {
                 await this.send(notif, token.token);
