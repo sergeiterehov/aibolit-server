@@ -45,8 +45,8 @@ router.get("/steps", withErrorHandler(async (req, res) => {
         res.write(steps.map((item) => [
             item.userId,
             item.device,
-            moment(item.periodFrom).toISOString(),
-            moment(item.periodTo).toISOString(),
+            moment(item.periodFrom).unix(),
+            moment(item.periodTo).unix(),
             item.val,
         ].map(csvValue).join(",")).join("\n") + "\n", "UTF-8");
     }
