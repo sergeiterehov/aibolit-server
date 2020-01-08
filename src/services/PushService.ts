@@ -61,7 +61,9 @@ export class PushService {
 
             await message.save();
 
-            const tokens = await UserToken.findAll({ where: {} });
+            const tokens = await UserToken.findAll({ where: {
+                userId: user.id,
+            } });
 
             if (!tokens.length) {
                 return;
