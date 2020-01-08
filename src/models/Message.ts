@@ -13,6 +13,7 @@ export class Message extends Model {
     fromUserId!: number;
     toUserId!: number;
     text!: string;
+    createdAt!: Date;
 
     toJSON() {
         const result: any = this.get();
