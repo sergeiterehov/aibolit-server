@@ -7,6 +7,7 @@ import { HealthHartRate } from "../../models/HealthHartRate";
 import { HealthWeight } from "../../models/HealthWeight";
 import { HealthHeight } from "../../models/HealthHeight";
 import { HealthMassIndex } from "../../models/HealthMassIndex";
+import { HealthMood } from "../../models/HealthMood";
 
 function csvValue(raw: any): string {
     if (raw instanceof Date) {
@@ -123,6 +124,17 @@ router.get(
             "device",
             "date",
             "val",
+        ]),
+    ),
+);
+
+router.get(
+    "/mood",
+    withErrorHandler(
+        dataSelector(HealthMood.tableName, [
+            "userId",
+            "date",
+            "smile",
         ]),
     ),
 );
