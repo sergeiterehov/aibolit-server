@@ -47,6 +47,8 @@ export const withErrorHandler = (methodHandler: RequestHandler): RequestHandler 
                 }
             });
         } catch (e) {
+            console.error("[ERROR]", e);
+
             if (e instanceof HttpError) {
                 return res.status(e.httpStatus).send({error: e.message || "UNKNOWN_ERROR"});
             }
