@@ -27,6 +27,14 @@ export class User extends Model {
     validatePassword(password: string): boolean {
         return getSecureKey(password) === this.secureKey;
     }
+
+    toJSON() {
+        const result: any = this.get();
+
+        delete result.secureKey;
+
+        return result;
+    }
 }
 
 User.init({

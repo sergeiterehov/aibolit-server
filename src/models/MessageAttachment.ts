@@ -15,6 +15,18 @@ export class MessageAttachment extends Model {
     type!: AttachmentType;
     resource!: string;
     resourceId!: number;
+
+    toJSON() {
+        const result: any = this.get();
+
+        result.type = AttachmentType[result.type];
+
+        delete result.messageId;
+        delete result.createdAt;
+        delete result.updatedAt;
+
+        return result;
+    }
 }
 
 MessageAttachment.init({
