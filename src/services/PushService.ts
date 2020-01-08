@@ -45,6 +45,7 @@ export class PushService {
     }
 
     public async sendHowAreYouAll() {
+        // TODO: By users
         const tokens = await UserToken.findAll({ where: {} });
         const notif = this.getHowAreYouNotification();
 

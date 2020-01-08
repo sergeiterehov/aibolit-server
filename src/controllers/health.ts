@@ -125,46 +125,6 @@ async function saveMassIndex(userId: number, items: IRawMassIndex[]) {
     }), {updateOnDuplicate: ["val"]});
 }
 
-/**
- * @deprecated
- */
-async function saveMood(userId: number, items: IRawMood[]) {
-    const moods = await HealthMood.bulkCreate(items.map((item) => {
-        return {
-            userId,
-            device: item.device || "",
-            date: moment(item.date).toDate(),
-            smile: item.smile,
-        };
-    }), {updateOnDuplicate: ["smile"]});
-
-    await Promise.all(moods.map(async (mood) => {
-        const message = new Message();
-
-        message.fromUserId = userId;
-        message.toUserId = SystemUser.System;
-
-        await message.save();
-
-        const attachment = new MessageAttachment();
-
-        attachment.messageId = message.id;
-        attachment.type = AttachmentType.Mood;
-        attachment.resourceId = mood.id;
-        attachment.resource = mood.smile;
-
-        await attachment.save();
-    }));
-}
-
-declare global {
-    namespace Express {
-        export interface Request {
-           user: User;
-        }
-    }
-}
-
 router.post("/save", withErrorHandler(async (req, res) => {
     const data: IRequestSave = req.body;
     const id = req.user.id;
@@ -174,33 +134,8 @@ router.post("/save", withErrorHandler(async (req, res) => {
     await saveWeight(id, data.weight);
     await saveHeight(id, data.height);
     await saveMassIndex(id, data.massIndex);
-    // TODO: depricated
-    await saveMood(id, data.mood);
 
     res.send({ok: true});
-}));
-
-router.post("/all", withErrorHandler(async (req, res) => {
-    const userId = req.user.id;
-
-    const hr = await HealthHartRate.findAll({where: {userId}});
-    const step = await HealthStep.findAll({where: {userId}});
-    const weight = await HealthWeight.findAll({where: {userId}});
-    const height = await HealthHeight.findAll({where: {userId}});
-    const massIndex = await HealthMassIndex.findAll({where: {userId}});
-    const mood = await HealthMood.findAll({where: {userId}});
-
-    res.send({
-        ok: true,
-        objects: {
-            hr,
-            step,
-            weight,
-            height,
-            massIndex,
-            mood,
-        },
-    });
 }));
 
 router.post("/clear", withErrorHandler(async (req, res) => {

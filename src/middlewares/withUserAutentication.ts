@@ -2,6 +2,14 @@ import { User } from "../models/User";
 import { RequestHandler } from "express";
 import { services } from "../services";
 
+declare global {
+    namespace Express {
+        export interface Request {
+           user: User;
+        }
+    }
+}
+
 const byJWT: RequestHandler = async (req, res, next) => {
     if (req.user) {
         return next();
