@@ -1,0 +1,1 @@
+forever start --uid telemed --spinSleepTime 10000 -c "nodemon --exitcrash" src/index.ts
