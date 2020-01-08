@@ -33,6 +33,7 @@ router.get("/steps", withErrorHandler(async (req, res) => {
             where: {},
             limit: 10000,
             offset,
+            raw: true,
         });
 
         if (!steps.length) {
