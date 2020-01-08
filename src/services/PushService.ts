@@ -1,4 +1,4 @@
-import { Provider, Notification } from "apn";
+import { Provider, Notification, token } from "apn";
 import { User } from "../models/User";
 import { UserToken } from "../models/UserToken";
 import { Message } from "../models/Message";
@@ -47,40 +47,39 @@ export class PushService {
     }
 
     public async sendHowAreYouAll() {
-        // TODO: By users
-        const tokens = await UserToken.findAll({ where: {} });
+        const users = await User.findAll({ where: {} });
+        
         const notif = this.getHowAreYouNotification();
+        let count = 0;
 
-        const usersWithMessage: number[] = [];
-
-        async function sendMessageToUser(userId: number) {
-            if (usersWithMessage.includes(userId)) {
-                return;
-            }
-
-            usersWithMessage.push(userId);
-
+        await Promise.all(users.map(async (user) => {
             const message = new Message();
 
             message.fromUserId = SystemUser.System;
-            message.toUserId = userId;
+            message.toUserId = user.id;
             message.text = howAreYouMessage;
 
             await message.save();
+
+            const tokens = await UserToken.findAll({ where: {} });
+
+            if (!tokens.length) {
+                return;
+            }
 
             const requestAttachment = new MessageAttachment();
 
             requestAttachment.messageId = message.id;
             requestAttachment.type = AttachmentType.MoodRequest;
-        }
 
-        await Promise.all(tokens.map(async (token) => {
-            await sendMessageToUser(token.userId);
+            await Promise.all(tokens.map(async (token) => {
+                await this.send(notif, token.token);
+            }));
 
-            await this.send(notif, token.token);
+            count += tokens.length;
         }));
 
-        return tokens.length;
+        return count;
     }
 
     public async send(notif: Notification, deviceToken: string|string[]) {
