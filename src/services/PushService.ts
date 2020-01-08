@@ -3,6 +3,8 @@ import { User } from "../models/User";
 import { UserToken } from "../models/UserToken";
 import { Message } from "../models/Message";
 import { SystemUser } from "../enums/SystemUser";
+import { MessageAttachment } from "../models/MessageAttachment";
+import { AttachmentType } from "../enums/AttachmentType";
 
 const howAreYouMessage = "Как сейчас настроение?";
 
@@ -65,6 +67,11 @@ export class PushService {
             message.text = howAreYouMessage;
 
             await message.save();
+
+            const requestAttachment = new MessageAttachment();
+
+            requestAttachment.messageId = message.id;
+            requestAttachment.type = AttachmentType.MoodRequest;
         }
 
         await Promise.all(tokens.map(async (token) => {
