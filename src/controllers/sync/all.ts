@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { withErrorHandler } from "../../middlewares/withErrorHandler";
 import { HealthStep } from "../../models/HealthStep";
+import moment from "moment";
 
 function csvValue(raw: any): string {
     switch (typeof raw) {
@@ -33,7 +34,6 @@ router.get("/steps", withErrorHandler(async (req, res) => {
             where: {},
             limit: 10000,
             offset,
-            raw: true,
         });
 
         if (!steps.length) {
@@ -45,8 +45,8 @@ router.get("/steps", withErrorHandler(async (req, res) => {
         res.write(steps.map((item) => [
             item.userId,
             item.device,
-            item.periodFrom,
-            item.periodTo,
+            moment(item.periodFrom).toISOString(),
+            moment(item.periodTo).toISOString(),
             item.val,
         ].map(csvValue).join(",")).join("\n") + "\n", "UTF-8");
     }
