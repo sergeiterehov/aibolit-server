@@ -44,8 +44,6 @@ function dataSelector(tableName, fields: string[]): RequestHandler {
                 break;
             }
 
-            console.log(items);
-
             offset += items.length;
 
             res.write(
