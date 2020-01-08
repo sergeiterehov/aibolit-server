@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { withSchema } from "../middlewares/withSchema";
+import { withValidationSchema, withSchema } from "../middlewares/withSchema";
 import { User } from "../models/User";
 import { services } from "../services";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
@@ -12,13 +12,16 @@ const router = Router();
  * sha1(sha1("SaltThisPlease") + ":" + $password)
  */
 router.post("/classic", withSchema({
-    email: {
-        isString: true,
+    type: "object",
+    properties: {
+        email: { type: "string" },
+        password: {
+            type: "string",
+            minLength: 40,
+            maxLength: 40,
+        }
     },
-    password: {
-        isLength: {options: {min: 40, max: 40}},
-        isLowercase: true,
-    }
+    required: [ "email", "password" ],
 }), withErrorHandler(async (req, res) => {
     const { password, email } = req.body;
 

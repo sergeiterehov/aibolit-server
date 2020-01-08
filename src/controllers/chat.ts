@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { isString } from "util";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
 import { Message } from "../models/Message";
 import { Op } from "sequelize";
@@ -33,9 +34,13 @@ async function createMoodFromResource(resource: any, userId: number) {
 }
 
 router.post("/with", withSchema({
-    userId: {
-        isInt: true,
+    type: "object",
+    properties: {
+        userId: {
+            type: "integer",
+        },
     },
+    required: ["userId"],
 }), withErrorHandler(async (req, res) => {
     const withUserId = req.body.userId;
 
@@ -77,28 +82,35 @@ router.post("/with", withSchema({
 }));
 
 router.post("/send", withSchema({
-    userId: {
-        isInt: true,
-    },
-    text: {
-        isString: true,
-    },
-    attachments: {
-        isArray: true,
-    },
-    "attachments.*.type": {
-        isString: true,
-        isIn: {
-            options: [Object.keys(AttachmentType)],
+    type: "object",
+    properties: {
+        userId: {
+            type: "integer",
+        },
+        text: {
+            type: "string",
+        },
+        attachments: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    type: {
+                        type: "string",
+                        enum: Object.values(AttachmentType).filter(isString),
+                    },
+                    resourceId: {
+                        type: "integer",
+                    },
+                    resource: {
+                        type: "any",
+                    },
+                },
+                required: ["type"],
+            },
         },
     },
-    "attachments.*.resourceId": {
-        isInt: true,
-        optional: true,
-    },
-    "attachments.*.resource": {
-        optional: true,
-    },
+    required: ["userId", "text"],
 }), withErrorHandler(async (req, res) => {
     const { userId, text, attachments } = req.body;
 

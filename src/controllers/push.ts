@@ -9,9 +9,13 @@ import { withSchema } from "../middlewares/withSchema";
 const router = Router().use(withUserAutentication);
 
 router.post("/refresh-device-token", withSchema({
-    token: {
-        isString: true,
-    }
+    type: "object",
+    properties: {
+        token: {
+            type: "string",
+        },
+    },
+    required: ["token"],
 }), withErrorHandler(async (req, res) => {
     const token = req.body.token;
     const userId = req.user.id;

@@ -6,13 +6,16 @@ import { withErrorHandler, RequestHttpError } from "../middlewares/withErrorHand
 const router = Router();
 
 router.post("/", withSchema({
-    email: {
-        isEmail: true,
+    type: "object",
+    properties: {
+        email: { type: "string" },
+        password: {
+            type: "string",
+            minLength: 40,
+            maxLength: 40,
+        }
     },
-    password: {
-        isLength: {options: {min: 40, max: 40}},
-        isLowercase: true,
-    },
+    required: [ "email", "password" ],
 }), withErrorHandler(async (req, res) => {
     if (req.user) {
         throw new RequestHttpError("ALREADY_AUTH");
