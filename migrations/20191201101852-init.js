@@ -44,7 +44,7 @@ module.exports = {
       avgVal: Sequelize.FLOAT,
     });
 
-    queryInterface.addConstraint("health_hart_rates", ["userId", "date", "device"], {
+    await queryInterface.addConstraint("health_hart_rates", ["userId", "date", "device"], {
       type: 'unique',
       name: 'health_hart_rates_uk'
     });
@@ -101,7 +101,7 @@ module.exports = {
       val: Sequelize.FLOAT,
     });
 
-    queryInterface.addConstraint("health_weights", ["userId", "date", "device"], {
+    await queryInterface.addConstraint("health_weights", ["userId", "date", "device"], {
       type: 'unique',
       name: 'health_weights_uk'
     });
@@ -129,7 +129,7 @@ module.exports = {
       val: Sequelize.FLOAT,
     });
 
-    queryInterface.addConstraint("health_heights", ["userId", "date", "device"], {
+    await queryInterface.addConstraint("health_heights", ["userId", "date", "device"], {
       type: 'unique',
       name: 'health_heights_uk'
     });
@@ -157,7 +157,7 @@ module.exports = {
       val: Sequelize.FLOAT,
     });
 
-    queryInterface.addConstraint("health_mass_indexes", ["userId", "date", "device"], {
+    await queryInterface.addConstraint("health_mass_indexes", ["userId", "date", "device"], {
       type: 'unique',
       name: 'health_mass_indexes_uk'
     });
@@ -185,7 +185,7 @@ module.exports = {
       smile: Sequelize.STRING,
     });
 
-    queryInterface.addConstraint("health_moods", ["userId", "date", "device"], {
+    await queryInterface.addConstraint("health_moods", ["userId", "date", "device"], {
       type: 'unique',
       name: 'health_moods_uk'
     });

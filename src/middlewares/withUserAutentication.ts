@@ -43,7 +43,7 @@ const byDevelopBody: RequestHandler = async (req, res, next) => {
         return next();
     }
 
-    const email = req.body && req.body.email;
+    const email = req.body && req.body.email || req.headers.email;
 
     if (!email) {
         return next();

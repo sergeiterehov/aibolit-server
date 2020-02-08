@@ -3,8 +3,8 @@ import { AuthService } from "./AuthService";
 
 export const services = {
     push: new PushService({
-        certPemFile: "/var/certs/telemed-apn-cert.pem",
-        keyPemFile: "/var/certs/telemed-apn-key.pem",
+        certPemFile: `${process.platform === "win32" ? "D:" : "/var"}/certs/telemed-apn-cert.pem`,
+        keyPemFile: `${process.platform === "win32" ? "D:" : "/var"}/certs/telemed-apn-key.pem`,
     }),
     auth: new AuthService(),
 };

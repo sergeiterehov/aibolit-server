@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { withValidationSchema, withSchema } from "../middlewares/withSchema";
+import { withSchema } from "../middlewares/withSchema";
 import { User } from "../models/User";
 import { services } from "../services";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
