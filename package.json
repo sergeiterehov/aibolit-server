@@ -7,7 +7,8 @@
     "start": "nodemon src/index.ts",
     "start:app": "nodemon src/app.ts",
     "start:ms:push": "nodemon src/msPush.ts",
-    "build": "node scripts/build.js",
+    "build": "ncc build src/index.ts -m -o dist",
+    "build:migrations": "node scripts/build-migrations.js",
     "migrate:add": "node scripts/migrate-add.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,6 +27,14 @@
   },
   "homepage": "https://github.com/sergeiterehov/telemed-server#readme",
   "dependencies": {
+    "mysql2": "^2.0.1",
+    "nodemon": "^2.0.1",
+    "sequelize": "^5.21.2",
+    "sequelize-cli": "^5.5.1",
+    "typescript": "^3.7.2"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.21.0",
     "@types/apn": "^2.1.2",
     "@types/axios": "^0.14.0",
     "@types/bluebird": "^3.5.29",
@@ -46,11 +55,6 @@
     "jsonschema": "^1.2.5",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.24.0",
-    "mysql2": "^2.0.1",
-    "nodemon": "^2.0.1",
-    "sequelize": "^5.21.2",
-    "sequelize-cli": "^5.5.1",
-    "ts-node": "^8.5.4",
-    "typescript": "^3.7.2"
+    "ts-node": "^8.5.4"
   }
 }
