@@ -9,6 +9,7 @@
     "start:ms:push": "nodemon src/msPush.ts",
     "build": "ncc build src/index.ts -m -o dist",
     "build:migrations": "node scripts/build-migrations.js",
+    "migrate:up": "sequelize db:migrate",
     "migrate:add": "node scripts/migrate-add.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
