@@ -90,7 +90,7 @@ router.post("/with", withSchema({
         ],
     }, include: [MessageAttachment], order: [["id", "DESC"]], limit: 100 });
 
-    messages.sort((a, b) => a.createdAt > b.createdAt ? 1 : a.createdAt < b.createdAt ? -1 : 0);
+    messages.sort((a, b) => (Number(a.createdAt) - Number(b.createdAt)) || (a.id - b.id));
 
     /**
      * TODO:
