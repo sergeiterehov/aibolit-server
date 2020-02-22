@@ -1,1 +1,1 @@
-forever start --uid telemed --spinSleepTime 10000 --killSignal=SIGTERM --append -c "nodemon --exitcrash" src/index.ts
+forever start --uid aibolit --spinSleepTime 10000 --killSignal=SIGTERM --append -c "nodemon --exitcrash" src/index.ts
