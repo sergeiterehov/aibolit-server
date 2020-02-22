@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { isString } from "util";
+import axios from "axios";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
 import { Message } from "../models/Message";
 import { Op } from "sequelize";
@@ -9,6 +10,7 @@ import { MessageAttachment } from "../models/MessageAttachment";
 import { HealthMood } from "../models/HealthMood";
 import { withErrorHandler, RequestHttpError, ExistsHttpError } from "../middlewares/withErrorHandler";
 import { withSchema } from "../middlewares/withSchema";
+import { SystemUser } from "../enums/SystemUser";
 
 const router = Router().use(withUserAutentication);
 
@@ -31,6 +33,29 @@ async function createMoodFromResource(resource: any, userId: number) {
     await mood.save();
 
     return mood;
+}
+
+async function nlpProcess(text: string, userId: number) {
+    const nlpResponse = await axios.post("http://localhost:3501/process", {
+        context: `user/${userId}`,
+        input: text,
+    }, {
+        timeout: 10000,
+    });
+
+    if (nlpResponse.status !== 200) {
+        return;
+    }
+
+    const nlpResponseData = nlpResponse.data;
+
+    const nlpMessage = new Message();
+
+    nlpMessage.fromUserId = SystemUser.System;
+    nlpMessage.toUserId = userId;
+    nlpMessage.text = nlpResponseData.output;
+
+    await nlpMessage.save();
 }
 
 router.post("/with", withSchema({
@@ -110,7 +135,7 @@ router.post("/send", withSchema({
             },
         },
     },
-    required: ["userId", "text"],
+    required: ["userId", "text", "attachments"],
 }), withErrorHandler(async (req, res) => {
     const { userId, text, attachments } = req.body;
 
@@ -152,6 +177,12 @@ router.post("/send", withSchema({
         } catch (e) {
             warns.push((e && e.message) || "UNKNOWN_ERROR");
         }
+    }
+
+    if (text && toUser.id === SystemUser.System) {
+        // Асинхронная операция.
+        nlpProcess(text, fromUser.id)
+            .catch((e) => console.error("[NLP ERROR]", e instanceof Error ? e.message : e));
     }
 
     res.send({
