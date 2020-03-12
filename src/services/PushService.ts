@@ -36,14 +36,17 @@ export class PushService {
         return notif;
     }
 
-    public async sendHowAreYouByUser(user: User) {
-        const tokenModels = await UserToken.findAll({ where: { userId: user.id } });
+    public async sendToUser(userId: number, notif: Notification) {
+        const tokenModels = await UserToken.findAll({ where: { userId } });
         const tokens = tokenModels.map((model) => model.token);
 
-        const notif = this.getHowAreYouNotification();
         const response = await this.send(notif, tokens);
 
         return response.sent.length;
+    }
+
+    public async sendHowAreYouByUser(user: User) {
+        return this.sendToUser(user.id, this.getHowAreYouNotification());
     }
 
     public async sendHowAreYouAll() {

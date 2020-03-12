@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { isString } from "util";
-import axios from "axios";
 import { withUserAutentication } from "../middlewares/withUserAutentication";
 import { Message } from "../models/Message";
 import { Op } from "sequelize";
@@ -10,7 +9,7 @@ import { MessageAttachment } from "../models/MessageAttachment";
 import { HealthMood } from "../models/HealthMood";
 import { withErrorHandler, RequestHttpError, ExistsHttpError } from "../middlewares/withErrorHandler";
 import { withSchema } from "../middlewares/withSchema";
-import { SystemUser } from "../enums/SystemUser";
+import { services } from "../services";
 
 const router = Router().use(withUserAutentication);
 
@@ -33,29 +32,6 @@ async function createMoodFromResource(resource: any, userId: number) {
     await mood.save();
 
     return mood;
-}
-
-async function nlpProcess(text: string, userId: number) {
-    const nlpResponse = await axios.post("http://localhost:3501/process", {
-        context: `user/${userId}`,
-        input: text,
-    }, {
-        timeout: 10000,
-    });
-
-    if (nlpResponse.status !== 200) {
-        return;
-    }
-
-    const nlpResponseData = nlpResponse.data;
-
-    const nlpMessage = new Message();
-
-    nlpMessage.fromUserId = SystemUser.System;
-    nlpMessage.toUserId = userId;
-    nlpMessage.text = nlpResponseData.output;
-
-    await nlpMessage.save();
 }
 
 router.post("/with", withSchema({
@@ -147,48 +123,28 @@ router.post("/send", withSchema({
 
     const fromUser = req.user;
 
-    const message = new Message();
+    const attachmentsModels = await Promise.all(Array(...attachments).map(async (attachmentItem) => {
+        const attachment = new MessageAttachment();
 
-    message.fromUserId = fromUser.id;
-    message.toUserId = toUser.id;
-    message.text = text;
+        // TODO: fix this shit
+        attachment.type = AttachmentType[attachmentItem.type as string];
+        attachment.resourceId = attachmentItem.resourceId;
 
-    await message.save();
+        if (attachment.type === AttachmentType.Mood) {
+            const mood = await createMoodFromResource(attachmentItem.resource, fromUser.id);
 
-    const warns: string[] = [];
-
-    for (const attachmentItem of attachments) {
-        try {
-            const attachment = new MessageAttachment();
-
-            attachment.messageId = message.id;
-            // TODO: fix this shit
-            attachment.type = AttachmentType[attachmentItem.type as string];
-            attachment.resourceId = attachmentItem.resourceId;
-
-            if (attachment.type === AttachmentType.Mood) {
-                const mood = await createMoodFromResource(attachmentItem.resource, fromUser.id);
-
-                attachment.resourceId = mood.id;
-                attachment.resource = mood.smile;
-            }
-
-            await attachment.save();
-        } catch (e) {
-            warns.push((e && e.message) || "UNKNOWN_ERROR");
+            attachment.resourceId = mood.id;
+            attachment.resource = mood.smile;
         }
-    }
 
-    if (text && toUser.id === SystemUser.System) {
-        // Асинхронная операция.
-        nlpProcess(text, fromUser.id)
-            .catch((e) => console.error("[NLP ERROR]", e instanceof Error ? e.message : e));
-    }
+        return attachment;
+    }));
+
+    const message = await services.message.send(fromUser.id, toUser.id, text, attachmentsModels);
 
     res.send({
         ok: true,
         id: message.id,
-        warns: warns.length ? warns : undefined,
     });
 }));
 
