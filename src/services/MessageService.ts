@@ -1,10 +1,16 @@
 import axios from "axios";
+import { Op } from "sequelize";
+import { services } from ".";
 import { Message } from "../models/Message";
 import { MessageAttachment } from "../models/MessageAttachment";
+import { AttachmentType } from "../enums/AttachmentType";
+import { User } from "../models/User";
+import { UserToken } from "../models/UserToken";
 import { SystemUser } from "../enums/SystemUser";
-import { sendMessageToUserBySocket } from "../socket";
-import { services } from ".";
 import { Notification } from "apn";
+import { sendMessageToUserBySocket } from "../socket";
+
+const howAreYouMessage = "Как сейчас настроение?";
 
 async function nlpProcess(text: string, userId: number) {
     const nlpResponse = await axios.post("http://localhost:3501/process", {
@@ -78,5 +84,75 @@ export class MessageService {
         }
 
         return false;
+    }
+
+    public getHowAreYouNotification() {
+        const notif = new Notification();
+
+        notif.topic = "ru.sberbank.iHealthMonitor";
+        notif.alert = {
+            title: "У вас новое сообщение",
+            body: howAreYouMessage,
+        };
+
+        return notif;
+    }
+
+    public async sendHowAreYouByUser(user: User) {
+        return services.push.sendToUser(user.id, this.getHowAreYouNotification());
+    }
+
+    public async sendHowAreYouAll() {
+        const users = await User.findAll({ where: {} });
+        
+        const notif = this.getHowAreYouNotification();
+        let count = 0;
+
+        await Promise.all(users.map(async (user) => {
+            if (user.id < 0) {
+                return;
+            }
+
+            const exists = await Message.findOne({ where: {
+                [Op.or]: [
+                    {
+                        fromUserId: user.id,
+                    },
+                    {
+                        toUserId: user.id,
+                    },
+                ],
+            }, include: [MessageAttachment], limit: 1, order: [["id", "DESC"]] });
+
+            if (exists && exists.fromUserId === SystemUser.System) {
+                const [attachement]: MessageAttachment[] = exists["MessageAttachments"] || [];
+
+                if (attachement && attachement.type === AttachmentType.MoodRequest) {
+                    return;
+                }
+            }
+
+            const requestAttachment = new MessageAttachment();
+
+            requestAttachment.type = AttachmentType.MoodRequest;
+
+            await this.send(SystemUser.System, user.id, howAreYouMessage, [requestAttachment]);
+
+            const tokens = await UserToken.findAll({ where: {
+                userId: user.id,
+            } });
+
+            if (!tokens.length) {
+                return;
+            }
+
+            await Promise.all(tokens.map(async (token) => {
+                await services.push.send(notif, token.token);
+            }));
+
+            count += tokens.length;
+        }));
+
+        return count;
     }
 }
