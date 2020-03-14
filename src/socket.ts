@@ -1,4 +1,5 @@
 import WebSocket, { Server } from "ws";
+import { Server as HTTPServer } from "http";
 import { services } from "./services";
 
 interface IConnectionContext {
@@ -27,30 +28,32 @@ export function sendMessageToUserBySocket(userId: number, event: string) {
     return sockets.length > 0;
 }
 
-const wss = new Server({ port: 3001 });
+export function registerWebSocket(server: HTTPServer) {
+    const wss = new Server({ server });
 
-wss.on("connection", (socket, request) => {
-    socket.on("close", () => {
-        connections.delete(socket);
+    wss.on("connection", (socket, request) => {
+        socket.on("close", () => {
+            connections.delete(socket);
+        });
+
+        const context: IConnectionContext = {};
+
+        connections.set(socket, context);
+
+        console.log("CONNECTION", request.headers);
+
+        const accessToken = request.headers.authorization;
+
+        if (!accessToken) {
+            return socket.close(4403, JSON.stringify({error: "AUTHENTICATION_REQUIRED"}));
+        }
+
+        const userId = services.auth.verifyAccessToken(accessToken);
+
+        if (userId === undefined) {
+            return socket.close(4403, JSON.stringify({error: "AUTHENTICATION_REQUIRED"}));
+        }
+
+        context.userId = userId;
     });
-
-    const context: IConnectionContext = {};
-
-    connections.set(socket, context);
-
-    console.log("CONNECTION", request.headers);
-
-    const accessToken = request.headers.authorization;
-
-    if (!accessToken) {
-        return socket.close(403, JSON.stringify({error: "AUTHENTICATION_REQUIRED"}));
-    }
-
-    const userId = services.auth.verifyAccessToken(accessToken);
-
-    if (userId === undefined) {
-        return socket.close(403, JSON.stringify({error: "AUTHENTICATION_REQUIRED"}));
-    }
-
-    context.userId = userId;
-});
+}
