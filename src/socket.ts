@@ -1,15 +1,14 @@
-import socketio, { Socket } from "socket.io";
-import { Server } from "http";
+import WebSocket, { Server } from "ws";
 import { services } from "./services";
 
 interface IConnectionContext {
     userId?: number;
 }
 
-const connections = new Map<Socket, IConnectionContext>();
+const connections = new Map<WebSocket, IConnectionContext>();
 
-function getUserSockets(userId: number): Socket[] {
-    const sockets: Socket[] = [];
+function getUserSockets(userId: number): WebSocket[] {
+    const sockets: WebSocket[] = [];
 
     for (let [socket, context] of connections.entries()) {
         if (context.userId === userId) {
@@ -20,37 +19,38 @@ function getUserSockets(userId: number): Socket[] {
     return sockets;
 }
 
-export function sendMessageToUserBySocket(userId: number, event: string, ...args: any[]) {
+export function sendMessageToUserBySocket(userId: number, event: string) {
     const sockets = getUserSockets(userId);
 
-    sockets.forEach((socket) => socket.emit(event, ...args));
+    sockets.forEach((socket) => socket.send(event));
 
     return sockets.length > 0;
 }
 
-export function registerSocket(server: Server) {
-    const io = socketio(server);
+const wss = new Server({ port: 3001 });
 
-    io.use((socket, next) => {
-        const context: IConnectionContext = {};
-
-        connections.set(socket, context);
-
-        const accessToken = socket.handshake.headers["authorization"];
-        const userId = services.auth.verifyAccessToken(accessToken);
-
-        if (userId === undefined) {
-            return next(new Error("NOT_AUTHORIZED"));
-        }
-
-        context.userId = userId;
-
-        return next();
+wss.on("connection", (socket, request) => {
+    socket.on("close", () => {
+        connections.delete(socket);
     });
 
-    io.on("connection", (socket) => {
-        socket.on("disconnect", () => {
-            connections.delete(socket);
-        });
-    });
-}
+    const context: IConnectionContext = {};
+
+    connections.set(socket, context);
+
+    console.log("CONNECTION", request.headers);
+
+    const accessToken = request.headers.authorization;
+
+    if (!accessToken) {
+        return socket.close(403, JSON.stringify({error: "AUTHENTICATION_REQUIRED"}));
+    }
+
+    const userId = services.auth.verifyAccessToken(accessToken);
+
+    if (userId === undefined) {
+        return socket.close(403, JSON.stringify({error: "AUTHENTICATION_REQUIRED"}));
+    }
+
+    context.userId = userId;
+});

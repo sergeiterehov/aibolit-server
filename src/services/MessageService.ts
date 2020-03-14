@@ -55,7 +55,9 @@ export class MessageService {
     }
 
     public async newMessageNotification(message: Message) {
-        const socketOk = sendMessageToUserBySocket(message.toUserId, "message/new", JSON.stringify(message.toJSON()));
+        const socketOk = sendMessageToUserBySocket(message.toUserId, JSON.stringify({
+            Message: message.toJSON(),
+        }));
 
         if (socketOk) {
             return true;
