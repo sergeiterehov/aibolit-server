@@ -56,6 +56,18 @@ export class PushService {
         let count = 0;
 
         await Promise.all(users.map(async (user) => {
+            const exists = await Message.findOne({ where: {
+                toUserId: user.id,
+            }, include: [MessageAttachment], limit: 1, order: [["id", "DESC"]] });
+
+            if (exists && exists.fromUserId === SystemUser.System) {
+                const [attachement]: MessageAttachment[] = exists["Attachments"] || [];
+
+                if (attachement && attachement.type === AttachmentType.MoodRequest) {
+                    return;
+                }
+            }
+
             const message = new Message();
 
             message.fromUserId = SystemUser.System;
