@@ -1,4 +1,5 @@
-import { Provider, Notification, token } from "apn";
+import { Op } from "sequelize";
+import { Provider, Notification } from "apn";
 import { User } from "../models/User";
 import { UserToken } from "../models/UserToken";
 import { Message } from "../models/Message";
@@ -61,7 +62,14 @@ export class PushService {
             }
 
             const exists = await Message.findOne({ where: {
-                toUserId: user.id,
+                [Op.or]: [
+                    {
+                        fromUserId: user.id,
+                    },
+                    {
+                        toUserId: user.id,
+                    },
+                ],
             }, include: [MessageAttachment], limit: 1, order: [["id", "DESC"]] });
 
             if (exists && exists.fromUserId === SystemUser.System) {
