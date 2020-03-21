@@ -33,7 +33,7 @@ router.post("/me", withSchema({
     user.lastName = lastName || user.lastName;
     user.middleName = middleName || user.middleName;
 
-    user.gender = gender || user.gender;
+    user.gender = gender ? Number(Gender[gender]) : user.gender;
 
     user.birthDate = birthDate || user.birthDate;
 

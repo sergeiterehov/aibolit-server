@@ -44,6 +44,8 @@ export class User extends Model {
 
         delete result.secureKey;
 
+        result.gender = Gender[result.gender];
+
         return result;
     }
 }
