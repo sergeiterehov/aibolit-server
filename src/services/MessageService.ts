@@ -104,11 +104,10 @@ export class MessageService {
 
     public async sendHowAreYouAll() {
         const users = await User.findAll({ where: {} });
-        
-        const notif = this.getHowAreYouNotification();
-        let count = 0;
 
-        await Promise.all(users.map(async (user) => {
+        const justNotifications: Promise<any>[] = [];
+
+        const activeUsers = (await Promise.all(users.map(async (user) => {
             if (user.id < 0) {
                 return;
             }
@@ -128,31 +127,30 @@ export class MessageService {
                 const [attachement]: MessageAttachment[] = exists["MessageAttachments"] || [];
 
                 if (attachement && attachement.type === AttachmentType.MoodRequest) {
+                    // Если сообщение уже весит, то отправляем нофтификацию.
+                    justNotifications.push(this.newMessageNotification(exists));
+
                     return;
                 }
             }
 
+            return user;
+        }))).filter<User>(Boolean as any);
+
+        await Promise.all(activeUsers.map(async (user) => {
             const requestAttachment = new MessageAttachment();
 
             requestAttachment.type = AttachmentType.MoodRequest;
 
             await this.send(SystemUser.System, user.id, howAreYouMessage, [requestAttachment]);
-
-            const tokens = await UserToken.findAll({ where: {
-                userId: user.id,
-            } });
-
-            if (!tokens.length) {
-                return;
-            }
-
-            await Promise.all(tokens.map(async (token) => {
-                await services.push.send(notif, token.token);
-            }));
-
-            count += tokens.length;
         }));
 
-        return count;
+        // Ждем, когда будут отправлены все повторные оповещения.
+        await Promise.all(justNotifications);
+
+        return {
+            users: activeUsers.length,
+            justNotifications: justNotifications.length,
+        };
     }
 }
