@@ -13,22 +13,51 @@ import { sendMessageToUserBySocket } from "../socket";
 const howAreYouMessage = "Как сейчас настроение?";
 
 async function nlpProcess(text: string, userId: number) {
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+        return;
+    }
+
     const nlpResponse = await axios.post("http://localhost:3501/process", {
         context: `user/${userId}`,
         input: text,
+        variables: {
+            userName: user.firstName,
+        },
     }, {
         timeout: 10000,
     });
 
+    const nlpResponseData = nlpResponse.data;
+
     if (nlpResponse.status !== 200) {
+        console.log("[NLP ERROR]", userId, user.email, nlpResponseData);
+
         return;
     }
 
-    const nlpResponseData = nlpResponse.data;
+    console.log("[NLP RESPONSE]", userId, user.email, nlpResponseData);
 
-    const nlpMessage = await services.message.send(SystemUser.System, userId, nlpResponseData.output, []);
+    const { output, variables, actions } = nlpResponseData;
+
+    const nlpMessage = await services.message.send(SystemUser.System, userId, output, []);
 
     await nlpMessage.save();
+
+    await Promise.all((actions as string[]).map(async (action) => {
+        if (action === "saveUserProfile") {
+            const { userName } = variables;
+
+            user.firstName = userName;
+        }
+
+        await user.save();
+
+        sendMessageToUserBySocket(userId, JSON.stringify({
+            Profile: user.toJSON(),
+        }));
+    }));
 }
 
 export class MessageService {
