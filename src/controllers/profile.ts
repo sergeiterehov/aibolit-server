@@ -22,7 +22,7 @@ router.post("/me", withSchema({
 
         gender: { type: "string", enum: Object.values(Gender).filter(isString) },
 
-        birthDate: { type: "date" },
+        birthDate: { type: "string", format: "date" },
     },
 }), withErrorHandler(async (req, res) => {
     const user = req.user;
