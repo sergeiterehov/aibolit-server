@@ -65,10 +65,6 @@ export class MessageService {
             Message: message.toJSON(),
         }));
 
-        if (socketOk) {
-            return true;
-        }
-
         const notif = new Notification();
 
         notif.topic = "ru.sberbank.iHealthMonitor";
@@ -83,7 +79,7 @@ export class MessageService {
             return true;
         }
 
-        return false;
+        return socketOk;
     }
 
     public getHowAreYouNotification() {
