@@ -79,7 +79,7 @@ export class MessageService {
             body: message.text,
         };
 
-        const pushOk = await services.push.sendToUser(message.toUserId, new Notification()) > 0;
+        const pushOk = await services.push.sendToUser(message.toUserId, notif) > 0;
 
         if (pushOk) {
             console.log("APN SENT", message.toUserId);
