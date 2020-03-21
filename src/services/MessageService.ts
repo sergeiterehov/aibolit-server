@@ -52,6 +52,10 @@ async function nlpProcess(text: string, userId: number) {
             user.firstName = userName;
         }
 
+        if (action === "clearUser") {
+            user.firstName = null;
+        }
+
         await user.save();
 
         sendMessageToUserBySocket(userId, JSON.stringify({
