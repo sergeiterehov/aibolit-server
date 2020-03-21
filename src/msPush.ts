@@ -6,9 +6,9 @@ import "./models";
 const app = express();
 
 app.get("/how-are-you", async (req, res) => {
-    const number = await services.message.sendHowAreYouAll();
+    const numbers = await services.message.sendHowAreYouAll();
 
-    res.send(`OK (${moment().toISOString()}): ${number}\n`);
+    res.send(`OK (${moment().toISOString()}): ${JSON.stringify(numbers)}\n`);
 });
 
 app.listen(3500);
