@@ -23,7 +23,7 @@ async function nlpProcess(text: string, userId: number) {
         context: `user/${userId}`,
         input: text,
         variables: {
-            userName: user.firstName,
+            userName: user.firstName || undefined,
         },
     }, {
         timeout: 10000,
