@@ -65,6 +65,12 @@ export class MessageService {
             Message: message.toJSON(),
         }));
 
+        if (socketOk) {
+            console.log("SOCKET SENT", message.toUserId);
+
+            return true;
+        }
+
         const notif = new Notification();
 
         notif.topic = "ru.sberbank.iHealthMonitor";
@@ -76,10 +82,12 @@ export class MessageService {
         const pushOk = await services.push.sendToUser(message.toUserId, new Notification()) > 0;
 
         if (pushOk) {
+            console.log("APN SENT", message.toUserId);
+
             return true;
         }
 
-        return socketOk;
+        return false;
     }
 
     public getHowAreYouNotification() {

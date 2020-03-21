@@ -14,7 +14,7 @@ router.get("/", (req, res) => res.send("Hello, world!"));
 
 router.use("/registration", registrationRouter);
 router.use("/auth", authRouter);
-router.use("/prfile", profileRouter);
+router.use("/profile", profileRouter);
 router.use("/health", healthRouter);
 router.use("/sync", syncRouter);
 router.use("/push", pushRouter);
