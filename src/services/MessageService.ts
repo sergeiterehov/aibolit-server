@@ -5,10 +5,10 @@ import { Message } from "../models/Message";
 import { MessageAttachment } from "../models/MessageAttachment";
 import { AttachmentType } from "../enums/AttachmentType";
 import { User } from "../models/User";
-import { UserToken } from "../models/UserToken";
 import { SystemUser } from "../enums/SystemUser";
 import { Notification } from "apn";
 import { sendMessageToUserBySocket } from "../socket";
+import { Indicator } from "../models/Indicator";
 
 const howAreYouMessage = "Как сейчас настроение?";
 
@@ -19,10 +19,22 @@ async function nlpProcess(text: string, userId: number) {
         return;
     }
 
+    const userIndicators = await Indicator.findAll({ where: { userId: user.id } });
+    const globalIndicators = await Indicator.findAll({ where: { userId: null } });
+
+    const indicators = [
+        ...globalIndicators,
+        ...userIndicators,
+    ].reduce((list: Record<string, string>, ind) => ({
+        ...list,
+        [`${ind.userId ? "user" : "global"}${ind.key}`]: ind.value,
+    }), {});
+
     const nlpResponse = await axios.post("http://localhost:3501/process", {
         context: `user/${userId}`,
         input: text,
         variables: {
+            ...indicators,
             userName: user.firstName || undefined,
         },
     }, {
@@ -46,21 +58,58 @@ async function nlpProcess(text: string, userId: number) {
     await nlpMessage.save();
 
     await Promise.all((actions as string[]).map(async (action) => {
+        const updateUser = async () => {
+            await user.save();
+
+            sendMessageToUserBySocket(userId, JSON.stringify({
+                Profile: user.toJSON(),
+            }));
+        }
+
         if (action === "saveUserProfile") {
             const { userName } = variables;
 
             user.firstName = userName;
+
+            await updateUser();
         }
 
         if (action === "clearUser") {
             user.firstName = null;
+
+            await updateUser();
         }
 
-        await user.save();
+        if (action === "saveUserIndicators") {
+            const updatedIndicators = Object
+                .entries<string>(variables)
+                .filter(([key]) => key.indexOf("user") !== 0)
+                .map(([key, value]) => [key.substr(4), value])
+                .map(([key, value]) => {
+                    const exisits = userIndicators.find((ind) => ind.key === key)
 
-        sendMessageToUserBySocket(userId, JSON.stringify({
-            Profile: user.toJSON(),
-        }));
+                    if (exisits) {
+                        if (exisits.value === value) {
+                            return;
+                        }
+
+                        exisits.value = value;
+
+                        return exisits;
+                    }
+
+                    const ind = new Indicator();
+
+                    ind.userId = user.id;
+                    ind.key = key;
+                    ind.value = value;
+
+                    return ind;
+                })
+                .filter<Indicator>(Boolean as any);
+
+            await Promise.all(updatedIndicators.map((ind) => ind.save()));
+        }
     }));
 }
 
