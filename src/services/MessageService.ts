@@ -1,4 +1,3 @@
-import axios from "axios";
 import { Op } from "sequelize";
 import { services } from ".";
 import { Message } from "../models/Message";
@@ -8,95 +7,8 @@ import { User } from "../models/User";
 import { SystemUser } from "../enums/SystemUser";
 import { Notification } from "apn";
 import { sendMessageToUserBySocket } from "../socket";
-import { Indicator } from "../models/Indicator";
 
 const howAreYouMessage = "Как сейчас настроение?";
-
-async function nlpProcess(text: string, userId: number) {
-    const user = await User.findByPk(userId);
-
-    if (!user) {
-        return;
-    }
-
-    const userIndicators = await Indicator.findActualsByUser(userId);
-    const globalIndicators = await Indicator.findActualsGlobal();
-
-    const indicators = [
-        ...globalIndicators,
-        ...userIndicators,
-    ].reduce((list: Record<string, string>, ind) => ({
-        ...list,
-        [`${ind.userId ? "user" : "global"}${ind.key}`]: ind.value,
-    }), {});
-
-    const nlpResponse = await axios.post("http://localhost:3501/process", {
-        context: `user/${userId}`,
-        input: text,
-        variables: {
-            ...indicators,
-            userName: user.firstName || undefined,
-        },
-    }, {
-        timeout: 10000,
-    });
-
-    const nlpResponseData = nlpResponse.data;
-
-    if (nlpResponse.status !== 200) {
-        console.log("[NLP ERROR]", userId, user.email, nlpResponseData);
-
-        return;
-    }
-
-    console.log("[NLP RESPONSE]", userId, user.email, nlpResponseData);
-
-    const { output, variables, actions } = nlpResponseData;
-
-    const nlpMessage = await services.message.send(SystemUser.System, userId, output, []);
-
-    await nlpMessage.save();
-
-    await Promise.all((actions as string[]).map(async (action) => {
-        const updateUser = async () => {
-            await user.save();
-
-            sendMessageToUserBySocket(userId, JSON.stringify({
-                Profile: user.toJSON(),
-            }));
-        }
-
-        if (action === "saveUserProfile") {
-            const { userName } = variables;
-
-            user.firstName = userName;
-
-            await updateUser();
-        }
-
-        if (action === "clearUser") {
-            user.firstName = null;
-
-            await updateUser();
-        }
-
-        if (action === "saveUserIndicators") {
-            await Promise.all(Object
-                .entries<string>(variables)
-                .filter(([key]) => key.indexOf("user") === 0)
-                .map(([key, value]) => [key.substr(4), value])
-                .map(async ([key, value]) => {
-                    const ind = new Indicator();
-
-                    ind.userId = user.id;
-                    ind.key = key;
-                    ind.value = value;
-
-                    await ind.save();
-                }));
-        }
-    }));
-}
 
 export class MessageService {
     public async send(fromUserId: number, toUserId: number, text: string, attachments: MessageAttachment[]) {
@@ -115,7 +27,7 @@ export class MessageService {
         }));
 
         if (text && toUserId === SystemUser.System) {
-            nlpProcess(text, fromUserId)
+            services.nlp.process(text, fromUserId)
                 .catch((e) => console.error("[NLP ERROR]", e instanceof Error ? e.message : e));
         }
 

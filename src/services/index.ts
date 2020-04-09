@@ -1,6 +1,7 @@
 import { PushService } from "./PushService";
 import { AuthService } from "./AuthService";
 import { MessageService } from "./MessageService";
+import { NlpService } from "./NlpService";
 
 export const services = {
     push: new PushService({
@@ -9,4 +10,5 @@ export const services = {
     }),
     auth: new AuthService(),
     message: new MessageService(),
+    nlp: new NlpService(),
 };
