@@ -19,8 +19,8 @@ async function nlpProcess(text: string, userId: number) {
         return;
     }
 
-    const userIndicators = await Indicator.findAll({ where: { userId: user.id } });
-    const globalIndicators = await Indicator.findAll({ where: { userId: null } });
+    const userIndicators = await Indicator.findActualsByUser(userId);
+    const globalIndicators = await Indicator.findActualsGlobal();
 
     const indicators = [
         ...globalIndicators,
@@ -81,34 +81,19 @@ async function nlpProcess(text: string, userId: number) {
         }
 
         if (action === "saveUserIndicators") {
-            const updatedIndicators = Object
+            await Promise.all(Object
                 .entries<string>(variables)
-                .filter(([key]) => key.indexOf("user") !== 0)
+                .filter(([key]) => key.indexOf("user") === 0)
                 .map(([key, value]) => [key.substr(4), value])
-                .map(([key, value]) => {
-                    const exisits = userIndicators.find((ind) => ind.key === key)
-
-                    if (exisits) {
-                        if (exisits.value === value) {
-                            return;
-                        }
-
-                        exisits.value = value;
-
-                        return exisits;
-                    }
-
+                .map(async ([key, value]) => {
                     const ind = new Indicator();
 
                     ind.userId = user.id;
                     ind.key = key;
                     ind.value = value;
 
-                    return ind;
-                })
-                .filter<Indicator>(Boolean as any);
-
-            await Promise.all(updatedIndicators.map((ind) => ind.save()));
+                    await ind.save();
+                }));
         }
     }));
 }
