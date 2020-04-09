@@ -35,7 +35,7 @@ export class Indicator extends Model {
             (
                 SELECT max(i.id) as id, i.\`key\`
                 from indicators i
-                where ${condition} AND (expiredAt is null OR expiredAt <= NOW())
+                where ${condition} AND (expiredAt is null OR expiredAt > NOW())
                 GROUP BY i.\`key\`
             ) u
             LEFT JOIN indicators i
