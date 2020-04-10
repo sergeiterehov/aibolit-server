@@ -35,11 +35,12 @@ export class Indicator extends Model {
             (
                 SELECT max(i.id) as id, i.\`key\`
                 from indicators i
-                where ${condition} AND (expiredAt is null OR expiredAt > NOW())
+                where ${condition}
                 GROUP BY i.\`key\`
             ) u
             LEFT JOIN indicators i
-            ON u.id = i.id;
+            ON u.id = i.id
+            WHERE expiredAt is null OR expiredAt > NOW();
         `;
 
         return Indicator.sequelize.query<Indicator>(query, { model: this, mapToModel: true });

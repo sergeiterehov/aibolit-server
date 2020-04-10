@@ -23,14 +23,16 @@ export class NlpService {
             ...list,
             [`${ind.userId ? "user" : "global"}${ind.key}`]: ind.value,
         }), {});
+
+        const inputVariables = {
+            ...indicators,
+            userName: user.firstName || undefined,
+        };
     
         const nlpResponse = await axios.post("http://localhost:3501/process", {
             context: `user/${userId}`,
             input: text,
-            variables: {
-                ...indicators,
-                userName: user.firstName || undefined,
-            },
+            variables: inputVariables,
         }, {
             timeout: 10000,
         });
@@ -46,12 +48,11 @@ export class NlpService {
         console.log("[NLP RESPONSE]", userId, user.email, nlpResponseData);
     
         const { output, variables, actions } = nlpResponseData;
-    
-        const nlpMessage = await services.message.send(SystemUser.System, userId, output, []);
-    
-        await nlpMessage.save();
-    
-        await Promise.all((actions as string[]).map(async (action) => {
+
+        await (actions as string[])
+        // Убираем дубли!
+        .reduce((list: string[], item) => list.includes(item) ? list : [...list, item], [])
+        .map(async (action) => {
             const updateUser = async () => {
                 await user.save();
     
@@ -78,6 +79,8 @@ export class NlpService {
                 await Promise.all(Object
                     .entries<string>(variables)
                     .filter(([key]) => key.indexOf("user") === 0)
+                    //Должен измениться относительно входных данных.
+                    .filter(([key, value]) => value !== inputVariables[key])
                     .map(([key, value]) => [key.substr(4), value])
                     .map(async ([key, value]) => {
                         const ind = new Indicator();
@@ -89,6 +92,10 @@ export class NlpService {
                         await ind.save();
                     }));
             }
-        }));
+        })
+        // Сворачиваем в промис.
+        .reduce((all, item, i, list) => all || Promise.all(list));
+    
+        await services.message.send(SystemUser.System, userId, output, []);
     }
 }
