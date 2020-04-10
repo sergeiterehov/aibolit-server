@@ -94,7 +94,7 @@ export class NlpService {
             }
         })
         // Сворачиваем в промис.
-        .reduce((all, item, i, list) => all || Promise.all(list));
+        .reduce((all: any, item, i, list) => all || Promise.all(list), null);
     
         await services.message.send(SystemUser.System, userId, output, []);
     }
